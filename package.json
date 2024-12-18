@@ -1,5 +1,5 @@
 {
-  "name": "bakery-expense-tracker",
+  "name": "sistema-gestion-gastos",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -10,17 +10,24 @@
   },
   "dependencies": {
     "react": "^18",
+    "next": "14.0.3",
     "react-dom": "^18",
-    "next": "14.2.16"
+    "chart.js": "^4.4.0",
+    "react-chartjs-2": "^5.2.0",
+    "xlsx": "^0.18.5",
+    "file-saver": "^2.0.5",
+    "@types/file-saver": "^2.0.7"
   },
   "devDependencies": {
     "typescript": "^5",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "autoprefixer": "^10.0.1",
     "postcss": "^8",
-    "tailwindcss": "^3.4.1",
+    "tailwindcss": "^3.3.0",
     "eslint": "^8",
-    "eslint-config-next": "14.2.16"
+    "eslint-config-next": "14.0.3"
   }
 }
+

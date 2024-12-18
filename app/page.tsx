@@ -1,101 +1,137 @@
-import Image from "next/image";
+'use client'
 
-export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+import { useState, useEffect } from 'react'
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import FileSaver from 'file-saver'
+import * as XLSX from 'xlsx'
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+interface Gasto {
+  fecha: string
+  hora: string
+  tipo: string
+  descripcion: string
+  monto: number
 }
+
+export default function GestionGastos() {
+  const [gastos, setGastos] = useState<Gasto[]>([])
+  const [nuevoGasto, setNuevoGasto] = useState<Gasto>({
+    fecha: '',
+    hora: '',
+    tipo: '',
+    descripcion: '',
+    monto: 0
+  })
+
+  useEffect(() => {
+    // Set initial date only on client-side
+    setNuevoGasto(prev => ({
+      ...prev,
+      fecha: new Date().toISOString().split('T')[0]
+    }))
+
+    // Load gastos from localStorage
+    const savedGastos = localStorage.getItem('gastos')
+    if (savedGastos) {
+      setGastos(JSON.parse(savedGastos))
+    }
+  }, [])
+
+  useEffect(() => {
+    // Save gastos to localStorage whenever it changes
+    localStorage.setItem('gastos', JSON.stringify(gastos))
+  }, [gastos])
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setNuevoGasto(prev => ({ ...prev, [name]: name === 'monto' ? parseFloat(value) : value }))
+  }
+
+  const guardarGasto = () => {
+    const ahora = new Date();
+    const gastoConFechaYHora = {
+      ...nuevoGasto,
+      fecha: ahora.toISOString().split('T')[0],
+      hora: ahora.toTimeString().split(' ')[0]
+    };
+    setGastos(prev => [...prev, gastoConFechaYHora]);
+    setNuevoGasto(prev => ({
+      ...prev,
+      tipo: '',
+      descripcion: '',
+      monto: 0
+    }));
+  };
+
+  const exportarAExcel = () => {
+    const worksheet = XLSX.utils.json_to_sheet(gastos)
+    const workbook = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Gastos")
+    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' })
+    const data = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+    
+    const fechaActual = new Date().toISOString().split('T')[0]
+    FileSaver.saveAs(data, `gastos_${fechaActual}.xlsx`)
+  }
+
+  return (
+    <div className="container mx-auto">
+      <h1 className="text-2xl font-bold mb-4">Gestión de Gastos</h1>
+      
+      <div className="grid grid-cols-3 gap-4 mb-4">
+        <Input
+          type="text"
+          name="tipo"
+          value={nuevoGasto.tipo}
+          onChange={handleInputChange}
+          placeholder="Tipo"
+        />
+        <Input
+          type="text"
+          name="descripcion"
+          value={nuevoGasto.descripcion}
+          onChange={handleInputChange}
+          placeholder="Descripción"
+        />
+        <Input
+          type="number"
+          name="monto"
+          value={nuevoGasto.monto}
+          onChange={handleInputChange}
+          placeholder="Monto"
+        />
+      </div>
+      
+      <div className="flex justify-between mb-4">
+        <Button onClick={guardarGasto}>Guardar Gasto</Button>
+        <Button onClick={exportarAExcel}>Cerrar Caja y Exportar</Button>
+      </div>
+
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Fecha</TableHead>
+            <TableHead>Hora</TableHead>
+            <TableHead>Tipo</TableHead>
+            <TableHead>Descripción</TableHead>
+            <TableHead>Monto</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {gastos.map((gasto, index) => (
+            <TableRow key={index}>
+              <TableCell>{gasto.fecha}</TableCell>
+              <TableCell>{gasto.hora}</TableCell>
+              <TableCell>{gasto.tipo}</TableCell>
+              <TableCell>{gasto.descripcion}</TableCell>
+              <TableCell>{gasto.monto}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  )
+}
+
