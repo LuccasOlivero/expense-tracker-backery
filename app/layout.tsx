@@ -26,8 +26,11 @@ export default function RootLayout({
                 <li className="mb-2">
                   <Link href="/" className="text-blue-500 hover:text-blue-700">Gestión de Gastos</Link>
                 </li>
-                <li>
+                <li className="mb-2">
                   <Link href="/graficos" className="text-blue-500 hover:text-blue-700">Gráficos</Link>
+                </li>
+                <li>
+                  <Link href="/personal" className="text-blue-500 hover:text-blue-700">Personal</Link>
                 </li>
               </ul>
             </div>
